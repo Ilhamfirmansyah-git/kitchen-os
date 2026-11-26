@@ -121,6 +121,6 @@ test("Backspace in search stays on recipes while BrowserBack leaves to home", as
   await search.focus();
   await page.keyboard.press("Backspace");
   await expect(page.getByRole("heading", { name: "Temukan resep" })).toBeVisible();
-  await page.keyboard.press("BrowserBack");
+  await page.evaluate(() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "BrowserBack", bubbles: true })));
   await expect(page.getByRole("heading", { name: /chef rumahan/i })).toBeVisible();
 });
