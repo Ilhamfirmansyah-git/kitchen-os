@@ -78,7 +78,7 @@ test("recipe can be saved and found in favorites", async ({ page }) => {
   await page.getByPlaceholder("Cari nama resep...").fill("Nasi Goreng Kampung");
   await page.getByRole("button", { name: /Nasi Goreng Kampung/i }).click();
   await page.getByRole("button", { name: /Simpan ke favorit/i }).click();
-  await page.getByRole("button", { name: "Favorit" }).click();
+  await page.locator("aside nav").getByRole("button", { name: "Favorit" }).click();
 
   await expect(page.getByRole("button", { name: /Nasi Goreng Kampung/i })).toBeVisible();
 });
