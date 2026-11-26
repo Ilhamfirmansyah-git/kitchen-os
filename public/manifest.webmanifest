@@ -3,9 +3,12 @@
   "short_name": "Kitchen OS",
   "description": "Your kitchen companion",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#171A18",
   "theme_color": "#171A18",
   "orientation": "landscape",
-  "icons": []
+  "icons": [
+    {"src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+  ]
 }
