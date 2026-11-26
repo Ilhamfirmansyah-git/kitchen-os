@@ -71,7 +71,8 @@ export default function KitchenHome() {
  const audioContextRef = useRef<AudioContext | null>(null);
  const alertedTimersRef = useRef<Set<string>>(new Set());
  const [now,setNow] = useState(new Date());
- const [sound,setSound] = useState(true);\n const [isOnline,setIsOnline] = useState(true);
+ const [sound,setSound] = useState(true);
+ const [isOnline,setIsOnline] = useState(true);
  const [showHelp,setShowHelp] = useState(false);
  const [aiText,setAiText] = useState("");
  const [aiAnswer,setAiAnswer] = useState("");
@@ -79,7 +80,8 @@ export default function KitchenHome() {
  const [aiLoading,setAiLoading] = useState(false);
  const mainRef = useRef<HTMLElement>(null);
 
- useEffect(()=>{ const t=setInterval(()=>setNow(new Date()),1000); return ()=>clearInterval(t); },[]);\n useEffect(()=>{const sync=()=>setIsOnline(navigator.onLine);sync();window.addEventListener("online",sync);window.addEventListener("offline",sync);return()=>{window.removeEventListener("online",sync);window.removeEventListener("offline",sync);};},[]);
+ useEffect(()=>{ const t=setInterval(()=>setNow(new Date()),1000); return ()=>clearInterval(t); },[]);
+ useEffect(()=>{const sync=()=>setIsOnline(navigator.onLine);sync();window.addEventListener("online",sync);window.addEventListener("offline",sync);return()=>{window.removeEventListener("online",sync);window.removeEventListener("offline",sync);};},[]);
  useEffect(()=>{if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js").catch(()=>{});}},[]);
  useEffect(()=>{ 
   try {
