@@ -30,7 +30,7 @@ Open http://localhost:3000.
 - Installable PWA metadata and basic offline fallback
 
 ## Important limitations
-This is the first implementation slice, not a production-ready release. The recipe catalog currently contains 30 sample recipes across Indonesian, Japanese, Korean, Chinese, Italian, Mediterranean, and Western dishes; nutrition values are illustrative metadata and should not be treated as dietary guidance. Browser audio alarms are best-effort and may be blocked or delayed when the browser is suspended or the app is closed. Spatial D-pad navigation is heuristic and must be validated with a physical Android TV remote. Comprehensive offline data caching, YouTube playback is not embedded yet; the video page uses direct YouTube search links. Configure the server-side AI environment variables from `.env.example` before using AI Chef. Test provider compatibility, rate limits, and Android TV behavior before release. The service worker caches the app shell on repeat visits; it does not guarantee that every recipe image or route works offline.
+This is the first implementation slice, not a production-ready release. The recipe catalog currently contains 30 sample recipes across Indonesian, Japanese, Korean, Chinese, Italian, Mediterranean, and Western dishes; nutrition values are illustrative metadata and should not be treated as dietary guidance. Browser audio alarms are best-effort and may be blocked or delayed when the browser is suspended or the app is closed. Spatial D-pad navigation is heuristic and must be validated with a physical Android TV remote. Comprehensive offline data caching, The video page opens focused YouTube search results; playback is not embedded inside Kitchen OS. Configure the server-side AI environment variables from `.env.example` before using AI Chef. Test provider compatibility, rate limits, and Android TV behavior before release. The service worker caches the app shell on repeat visits; it does not guarantee that every recipe image or route works offline.
 
 No paid services or deployment have been configured.
 
@@ -41,4 +41,4 @@ Copy `.env.example` to `.env.local` and set:
 - `KITCHEN_AI_API_KEY`: secret API key (server only; never use a `NEXT_PUBLIC_` prefix)
 - `KITCHEN_AI_MODEL`: model identifier supported by your provider
 
-AI requests are sent to `/api/chef`. The route validates message length, applies a 30-second timeout, and returns user-safe errors. No AI provider key is required for the app to build, but the AI Chef feature returns a configuration message until these variables are set.
+AI requests are sent to `/api/chef`. The route validates message length, applies a 30-second timeout, returns user-safe errors, and includes a basic per-instance IP rate limit (not a substitute for a distributed production rate limiter). No AI provider key is required for the app to build, but the AI Chef feature returns a configuration message until these variables are set.
