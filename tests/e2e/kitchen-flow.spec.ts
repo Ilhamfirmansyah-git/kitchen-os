@@ -37,3 +37,25 @@ test("directional keys move focus between remote controls", async ({ page }) => 
   expect(nextFocus).not.toBe(initialFocus);
   await expect(page.locator(":focus-visible")).toHaveCount(1);
 });
+
+test("Backspace edits the search field instead of leaving the page", async ({ page }) => {
+  await page.getByRole("button", { name: /jelajahi resep/i }).click();
+  const search = page.getByPlaceholder("Cari nama resep...");
+  await search.fill("Soto Ayam");
+  await search.focus();
+  await page.keyboard.press("Backspace");
+
+  await expect(page.getByRole("heading", { name: "Temukan resep" })).toBeVisible();
+  await expect(search).toHaveValue("Soto Aya");
+});
+
+test("remote focus stays inside the remote help dialog", async ({ page }) => {
+  await page.getByRole("button", { name: "Bantuan remote" }).click();
+  const dialog = page.getByRole("dialog", { name: "Kontrol remote" });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("ArrowDown");
+
+  await expect.poll(() => page.evaluate(() => {
+    return document.activeElement?.closest('[role="dialog"][aria-modal="true"]') !== null;
+  })).toBe(true);
+});
