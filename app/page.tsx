@@ -39,6 +39,7 @@ export default function KitchenHome() {
  const mainRef = useRef<HTMLElement>(null);
 
  useEffect(()=>{ const t=setInterval(()=>setNow(new Date()),1000); return ()=>clearInterval(t); },[]);
+ useEffect(()=>{if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js").catch(()=>{});}},[]);
  useEffect(()=>{ 
   try {
    const saved=localStorage.getItem("kitchen-timer");
