@@ -58,17 +58,47 @@ export default function KitchenHome() {
  useEffect(()=>{if(!timerHydrated)return;try{if(timerRunning&&timerEndAt!==null)localStorage.setItem("kitchen-timer",JSON.stringify({label:timerLabel,endAt:timerEndAt,running:true}));else localStorage.setItem("kitchen-timer",JSON.stringify({label:timerLabel,remaining:seconds,running:false}));}catch{}},[timerHydrated,timerRunning,timerEndAt,timerLabel,seconds]);
  const go = useCallback((p:string)=>{setPage(p);setShowHelp(false);},[]);
  useEffect(()=>{
-  const handler=(e:KeyboardEvent)=>{const tag=(e.target as HTMLElement)?.tagName;if(["INPUT","TEXTAREA"].includes(tag))return;
-   if(e.key==="Escape"||e.key==="Backspace"){if(showHelp){setShowHelp(false);return;}if(page!=="home"){go("home");return;}}
-   if(e.key==="ArrowDown"||e.key==="ArrowUp"||e.key==="ArrowLeft"||e.key==="ArrowRight"){
-    const els=Array.from(document.querySelectorAll<HTMLElement>('[data-focusable="true"]:not([disabled])')).filter(x=>x.offsetParent!==null);
-    const current=document.activeElement as HTMLElement;const i=els.indexOf(current);if(i<0){els[0]?.focus();return;}
-    const next=e.key==="ArrowRight"||e.key==="ArrowDown"?i+1:i-1;els[Math.max(0,Math.min(els.length-1,next))]?.focus();e.preventDefault();
+  const handler=(e:KeyboardEvent)=>{
+   const target=e.target as HTMLElement | null;
+   const tag=target?.tagName;
+   if(tag==="INPUT"||tag==="TEXTAREA"||target?.isContentEditable)return;
+   if(e.key==="Escape"||e.key==="Backspace"){
+    if(showHelp){setShowHelp(false);return;}
+    if(page==="detail"){go("recipes");return;}
+    if(page!=="home"){go("home");return;}
    }
-   if(e.key===" "&&page==="cooking"){e.preventDefault();}
+   const directions=["ArrowDown","ArrowUp","ArrowLeft","ArrowRight"];
+   if(directions.includes(e.key)){
+    const candidates=Array.from(document.querySelectorAll<HTMLElement>('[data-focusable="true"]:not([disabled])'))
+     .filter(el=>el.getClientRects().length>0&&getComputedStyle(el).visibility!=="hidden");
+    const current=(document.activeElement as HTMLElement | null)?.closest<HTMLElement>('[data-focusable="true"]');
+    if(!current||!candidates.includes(current)){
+     (mainRef.current?.querySelector<HTMLElement>('[data-focusable="true"]:not([disabled])')||candidates[0])?.focus();
+     e.preventDefault();return;
+    }
+    const from=current.getBoundingClientRect();
+    const cx=from.left+from.width/2, cy=from.top+from.height/2;
+    const dir=e.key;
+    const ranked=candidates.filter(el=>el!==current).map(el=>{
+     const r=el.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height/2;
+     const dx=x-cx, dy=y-cy;
+     const primary=dir==="ArrowRight"?dx:dir==="ArrowLeft"?-dx:dir==="ArrowDown"?dy:-dy;
+     const secondary=dir==="ArrowRight"||dir==="ArrowLeft"?Math.abs(dy):Math.abs(dx);
+     return {el,primary,secondary,score:primary>0?primary+secondary*1.7:Infinity};
+    }).filter(x=>Number.isFinite(x.score)).sort((a,b)=>a.score-b.score);
+    if(ranked[0])ranked[0].el.focus();
+    e.preventDefault();
+   }
   };
   window.addEventListener("keydown",handler);return()=>window.removeEventListener("keydown",handler);
  },[page,showHelp,go]);
+ useEffect(()=>{
+  const id=window.requestAnimationFrame(()=>{
+   const first=mainRef.current?.querySelector<HTMLElement>('[data-focusable="true"]:not([disabled])');
+   first?.focus({preventScroll:true});
+  });
+  return()=>window.cancelAnimationFrame(id);
+ },[page]);
  const filtered=useMemo(()=>recipes.filter(r=>(category==="Semua"||r.category===category||r.region===category)&&r.name.toLowerCase().includes(query.toLowerCase())),[category,query]);
  const favoriteRecipes=recipes.filter(r=>favorites.includes(r.id));
  const openRecipe=(r:Recipe)=>{setSelected(r);setServings(r.servings);setStep(0);go("detail");};
@@ -89,7 +119,7 @@ export default function KitchenHome() {
     <p className="mt-5 text-[10px] text-[#687269]">KITCHEN OS · PREVIEW 0.1</p>
    </aside>
    <section className="flex min-w-0 flex-1 flex-col" ref={mainRef}>
-    <header className="flex items-center justify-between border-b border-white/10 px-5 py-4 md:px-9"><div className="flex items-center gap-3"><div className="rounded-lg bg-[#A6C6A0]/15 p-2 text-[#A6C6A0] lg:hidden"><ChefHat size={22}/></div><div><p className="text-xs text-[#A5ADA5]">Kamis, {now.toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"})}</p><p className="text-sm font-semibold">{page==="home"?"Dapur yang lebih menyenangkan":nav.find(n=>n.id===page)?.label??(page==="detail"? "Detail resep":page==="chef"?"AI Chef":"Cooking mode")}</p></div></div><div className="flex items-center gap-3"><div className="hidden items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm text-[#A5ADA5] sm:flex"><Clock3 size={15}/>{now.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})}</div><button data-focusable="true" aria-label="Bantuan remote" onClick={()=>setShowHelp(true)} className="rounded-xl border border-white/10 p-2 text-[#A5ADA5] hover:text-white"><CircleHelp size={19}/></button></div></header>
+    <header className="flex items-center justify-between border-b border-white/10 px-5 py-4 md:px-9"><div className="flex items-center gap-3"><div className="rounded-lg bg-[#A6C6A0]/15 p-2 text-[#A6C6A0] lg:hidden"><ChefHat size={22}/></div><div><p className="text-xs text-[#A5ADA5]">{now.toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p><p className="text-sm font-semibold">{page==="home"?"Dapur yang lebih menyenangkan":nav.find(n=>n.id===page)?.label??(page==="detail"? "Detail resep":page==="chef"?"AI Chef":"Cooking mode")}</p></div></div><div className="flex items-center gap-3"><div className="hidden items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm text-[#A5ADA5] sm:flex"><Clock3 size={15}/>{now.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})}</div><button data-focusable="true" aria-label="Bantuan remote" onClick={()=>setShowHelp(true)} className="rounded-xl border border-white/10 p-2 text-[#A5ADA5] hover:text-white"><CircleHelp size={19}/></button></div></header>
     <div className="tv-scroll flex-1 overflow-y-auto px-5 py-7 md:px-9 md:py-9">
      {page==="home"&&<><div className="relative mb-9 overflow-hidden rounded-[28px] border border-white/10 bg-[#28332B]"><img src="https://images.unsplash.com/photo-1556911220-bff31c812dba?w=1600&q=85" className="absolute inset-0 h-full w-full object-cover opacity-35" alt="Dapur hangat"/><div className="absolute inset-0 bg-gradient-to-r from-[#1D251F] via-[#1D251F]/90 to-transparent"/><div className="relative max-w-2xl px-7 py-9 md:px-10 md:py-12"><p className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#B9D7B2]"><Leaf size={16}/> COOK SOMETHING GOOD TODAY</p><h1 className="text-3xl font-semibold leading-tight md:text-5xl">{greeting},<br/>chef rumahan.</h1><p className="mt-4 max-w-lg text-sm leading-relaxed text-[#D0D6CE] md:text-base">Inspirasi masakan, panduan langkah demi langkah, dan semua yang kamu butuhkan di satu layar.</p><div className="mt-7 flex flex-wrap gap-3"><button data-focusable="true" onClick={()=>go("recipes")} className="flex items-center gap-2 rounded-xl bg-[#A6C6A0] px-5 py-3 text-sm font-bold text-[#172019] hover:bg-[#BDD7B6]">Jelajahi resep <ArrowRight size={17}/></button><button data-focusable="true" onClick={()=>go("chef")} className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold"><Sparkles size={17}/> Tanya AI Chef</button></div></div></div>
       <div className="mb-9 grid grid-cols-2 gap-3 md:grid-cols-4"><div className="rounded-2xl border border-white/10 bg-[#222824] p-4"><Utensils className="mb-3 text-[#A6C6A0]"/><p className="text-2xl font-semibold">08</p><p className="text-xs text-[#A5ADA5]">Resep pilihan</p></div><div className="rounded-2xl border border-white/10 bg-[#222824] p-4"><Timer className="mb-3 text-[#A6C6A0]"/><p className="text-2xl font-semibold">{seconds?fmt(seconds):"00:00"}</p><p className="text-xs text-[#A5ADA5]">Timer aktif</p></div><div className="rounded-2xl border border-white/10 bg-[#222824] p-4"><Heart className="mb-3 text-[#A6C6A0]"/><p className="text-2xl font-semibold">{favorites.length.toString().padStart(2,"0")}</p><p className="text-xs text-[#A5ADA5]">Resep favorit</p></div><div className="rounded-2xl border border-white/10 bg-[#222824] p-4"><Flame className="mb-3 text-[#A6C6A0]"/><p className="text-2xl font-semibold">25 min</p><p className="text-xs text-[#A5ADA5]">Pilihan hari ini</p></div></div>
@@ -107,6 +137,6 @@ export default function KitchenHome() {
     <footer className="flex items-center justify-between border-t border-white/10 px-5 py-3 text-[10px] text-[#788179] md:px-9"><span>KITCHEN OS · MADE FOR THE HEART OF YOUR HOME</span><span className="hidden sm:block">PREVIEW BUILD 0.1.0</span><span className="flex items-center gap-1"><Wifi size={12}/> LOCAL-FIRST</span></footer>
    </section>
   </div>
-  {showHelp&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5" onClick={()=>setShowHelp(false)}><div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#222824] p-7 shadow-2xl" onClick={e=>e.stopPropagation()}><div className="mb-5 flex items-center justify-between"><h2 className="text-2xl font-semibold">Kontrol remote</h2><button data-focusable="true" onClick={()=>setShowHelp(false)}><X/></button></div><div className="space-y-3 text-sm">{[["↑ ↓ ← →","Pindah antar elemen"],["OK / Enter","Pilih tombol atau menu"],["Back / Escape","Kembali ke layar sebelumnya"],["Tab","Pindah fokus (browser)"]].map(([k,v])=><div key={k} className="flex items-center justify-between rounded-xl bg-[#171A18] p-3"><span className="font-mono text-[#A6C6A0]">{k}</span><span className="text-[#A5ADA5]">{v}</span></div>)}</div><p className="mt-5 text-xs leading-relaxed text-[#A5ADA5]">Catatan: navigasi remote saat ini adalah fondasi awal. Navigasi spasial per baris/kolom dan pemulihan fokus akan disempurnakan pada iterasi berikutnya.</p></div></div>}
+  {showHelp&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5" onClick={()=>setShowHelp(false)}><div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#222824] p-7 shadow-2xl" onClick={e=>e.stopPropagation()}><div className="mb-5 flex items-center justify-between"><h2 className="text-2xl font-semibold">Kontrol remote</h2><button data-focusable="true" onClick={()=>setShowHelp(false)}><X/></button></div><div className="space-y-3 text-sm">{[["↑ ↓ ← →","Pindah antar elemen"],["OK / Enter","Pilih tombol atau menu"],["Back / Escape","Kembali ke layar sebelumnya"],["Tab","Pindah fokus (browser)"]].map(([k,v])=><div key={k} className="flex items-center justify-between rounded-xl bg-[#171A18] p-3"><span className="font-mono text-[#A6C6A0]">{k}</span><span className="text-[#A5ADA5]">{v}</span></div>)}</div><p className="mt-5 text-xs leading-relaxed text-[#A5ADA5]">Navigasi arah kini memilih elemen berdasarkan posisi visual terdekat. Tekan Back untuk kembali ke daftar resep atau beranda.</p></div></div>}
  </main>;
 }
