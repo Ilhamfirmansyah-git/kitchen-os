@@ -10,6 +10,22 @@ const WINDOW_MS = 60_000;
 const SYSTEM_PROMPT = `Kamu adalah Kirtos, asisten koki rumahan di Kitchen OS. Jawab dalam bahasa Indonesia yang jelas, ringkas, hangat, dan praktis. Utamakan langkah yang bisa dilakukan di dapur rumah. Jika pengguna meminta resep, berikan bahan, takaran, langkah, estimasi waktu yang masuk akal, dan tips. Jangan mengarang fakta nutrisi atau menjamin keamanan pangan jika tidak yakin. Untuk ayam, telur, ikan, dan daging, ingatkan agar dimasak matang. Jika informasi penting tidak ada, tanyakan satu hal yang paling relevan. Jangan mengklaim melihat stok atau kondisi dapur pengguna.`;
 
 export async function POST(request: NextRequest) {
+  const origin = request.headers.get("origin");
+  const host = request.headers.get("host");
+  if (origin) {
+    try {
+      if (!host || new URL(origin).host !== host) {
+        return NextResponse.json({ error: "Permintaan tidak valid." }, { status: 403 });
+      }
+    } catch {
+      return NextResponse.json({ error: "Permintaan tidak valid." }, { status: 403 });
+    }
+  }
+  const declaredLength = Number(request.headers.get("content-length") || 0);
+  if (declaredLength > 8192) {
+    return NextResponse.json({ error: "Permintaan terlalu besar." }, { status: 413 });
+  }
+
   const clientIp = request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   const now = Date.now();
   const bucket = rateBuckets.get(clientIp);
@@ -28,7 +44,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "AI belum dikonfigurasi. Tambahkan KITCHEN_AI_API_KEY dan KITCHEN_AI_MODEL pada environment server." }, { status: 503 });
   }
   try {
-    const body = await request.json();
+    const rawBody = await request.text();
+    if (new TextEncoder().encode(rawBody).byteLength > 8192) {
+      return NextResponse.json({ error: "Permintaan terlalu besar." }, { status: 413 });
+    }
+    let body: { message?: unknown };
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: "Format permintaan tidak valid." }, { status: 400 });
+    }
     const message = typeof body?.message === "string" ? body.message.trim() : "";
     if (!message) return NextResponse.json({ error: "Tulis pertanyaan terlebih dahulu." }, { status: 400 });
     if (message.length > 2000) return NextResponse.json({ error: "Pertanyaan terlalu panjang. Maksimal 2.000 karakter." }, { status: 400 });
