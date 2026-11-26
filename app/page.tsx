@@ -121,14 +121,18 @@ export default function KitchenHome() {
      if((e.key==="ArrowLeft"&&!atStart)||(e.key==="ArrowRight"&&!atEnd)||(e.key==="ArrowUp"&&tag==="TEXTAREA"))return;
     }
    }
-   if(e.key==="Escape"||e.key==="Backspace"){
-    if(showHelp){setShowHelp(false);return;}
-    if(page==="detail"){go("recipes");return;}
-    if(page!=="home"){go("home");return;}
+   const isEditable=!!target&&(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||target.isContentEditable);
+   if(e.key==="Escape"||e.key==="Backspace"||e.key==="BrowserBack"){
+    if(showHelp){setShowHelp(false);e.preventDefault();return;}
+    if(e.key==="Backspace"&&isEditable)return;
+    if(e.key==="Escape"&&isEditable)return;
+    if(page==="detail"){go("recipes");e.preventDefault();return;}
+    if(page!=="home"){go("home");e.preventDefault();return;}
    }
    const directions=["ArrowDown","ArrowUp","ArrowLeft","ArrowRight"];
    if(directions.includes(e.key)){
-    const candidates=Array.from(document.querySelectorAll<HTMLElement>('[data-focusable="true"]:not([disabled])'))
+    const scope=showHelp?document.querySelector<HTMLElement>('[role="dialog"][aria-modal="true"]'):document;
+    const candidates=Array.from((scope||document).querySelectorAll<HTMLElement>('[data-focusable="true"]:not([disabled])'))
      .filter(el=>el.getClientRects().length>0&&getComputedStyle(el).visibility!=="hidden");
     const current=(document.activeElement as HTMLElement | null)?.closest<HTMLElement>('[data-focusable="true"]');
     if(!current||!candidates.includes(current)){
@@ -207,6 +211,6 @@ export default function KitchenHome() {
     <footer className="flex items-center justify-between border-t border-white/10 px-5 py-3 text-[10px] text-[#788179] md:px-9"><span>KITCHEN OS · MADE FOR THE HEART OF YOUR HOME</span><span className="hidden sm:block">PREVIEW BUILD 0.1.0</span><span className={`flex items-center gap-1 ${isOnline?"text-[#83C69A]":"text-[#E77F72]"}`}>{isOnline?<Wifi size={12}/>:<WifiOff size={12}/>} {isOnline?"ONLINE":"OFFLINE · MODE LOKAL"}</span></footer>
    </section>
   </div>
-  {showHelp&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5" onClick={()=>setShowHelp(false)}><div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#222824] p-7 shadow-2xl" onClick={e=>e.stopPropagation()}><div className="mb-5 flex items-center justify-between"><h2 className="text-2xl font-semibold">Kontrol remote</h2><button data-focusable="true" onClick={()=>setShowHelp(false)}><X/></button></div><div className="space-y-3 text-sm">{[["↑ ↓ ← →","Pindah antar elemen"],["OK / Enter","Pilih tombol atau menu"],["Back / Escape","Kembali ke layar sebelumnya"],["Tab","Pindah fokus (browser)"]].map(([k,v])=><div key={k} className="flex items-center justify-between rounded-xl bg-[#171A18] p-3"><span className="font-mono text-[#A6C6A0]">{k}</span><span className="text-[#A5ADA5]">{v}</span></div>)}</div><p className="mt-5 text-xs leading-relaxed text-[#A5ADA5]">Navigasi arah kini memilih elemen berdasarkan posisi visual terdekat. Tekan Back untuk kembali ke daftar resep atau beranda.</p></div></div>}
+  {showHelp&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-5" onClick={()=>setShowHelp(false)}><div role="dialog" aria-modal="true" aria-labelledby="remote-help-title" className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#222824] p-7 shadow-2xl" onClick={e=>e.stopPropagation()}><div className="mb-5 flex items-center justify-between"><h2 id="remote-help-title" className="text-2xl font-semibold">Kontrol remote</h2><button data-focusable="true" onClick={()=>setShowHelp(false)}><X/></button></div><div className="space-y-3 text-sm">{[["↑ ↓ ← →","Pindah antar elemen"],["OK / Enter","Pilih tombol atau menu"],["Back / Escape","Kembali ke layar sebelumnya"],["Tab","Pindah fokus (browser)"]].map(([k,v])=><div key={k} className="flex items-center justify-between rounded-xl bg-[#171A18] p-3"><span className="font-mono text-[#A6C6A0]">{k}</span><span className="text-[#A5ADA5]">{v}</span></div>)}</div><p className="mt-5 text-xs leading-relaxed text-[#A5ADA5]">Navigasi arah kini memilih elemen berdasarkan posisi visual terdekat. Tekan Back untuk kembali ke daftar resep atau beranda.</p></div></div>}
  </main>;
 }
