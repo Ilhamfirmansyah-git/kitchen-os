@@ -25,7 +25,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Playwright end-to-end checks cover recipe discovery/search, starting and advancing a cooking session, and directional-key focus movement at a 1920×1080 viewport. The same checks run in GitHub Actions.
+Playwright end-to-end checks cover recipe discovery/search, starting and advancing a cooking session, directional-key focus movement, Backspace editing, remote-help dialog focus and restoration, favorites, timer start/pause, and horizontal overflow at 1920×1080 and 1280×720. The same checks run in GitHub Actions.
 
 ## Current preview
 - Premium dark kitchen dashboard
