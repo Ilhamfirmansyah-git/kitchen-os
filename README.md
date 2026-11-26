@@ -21,14 +21,15 @@ Open http://localhost:3000.
 - Recipe collection with search and category filters
 - Recipe details and serving selector
 - Step-by-step cooking mode
-- Kitchen timer with timestamp-based countdown recovery after refresh/reopen (browser/device background restrictions still apply)
-- Favorites persisted locally
+- Primary kitchen timer with timestamp-based countdown recovery after refresh/reopen
+- Multiple independent named timers with pause, resume, reset, delete, local persistence, visual completion state, and best-effort browser audio alarm
+- Favorites and unfinished cooking sessions persisted locally; resume a recipe at the last completed step
 - AI Chef explicitly marked as demo mode (no live AI API configured)
-- TV remote keyboard foundation (arrow keys, Enter, Escape/Backspace)
+- TV remote navigation using directional spatial focus based on visible element positions, plus focus restoration on page changes
 - Responsive layouts for wide and smaller screens
 - Installable PWA metadata and basic offline fallback
 
 ## Important limitations
-This is the first implementation slice, not a production-ready release. The recipe catalog currently contains 8 curated sample recipes; nutrition values are illustrative sample metadata and should be reviewed before being treated as dietary guidance. True multi-timer support, reliable audible alarms under TV browser restrictions, true spatial D-pad focus navigation, comprehensive offline data caching, YouTube playback, and a secure server-side AI integration remain to be implemented and tested on the target Android TV device. The service worker caches the app shell on repeat visits; it does not guarantee that every recipe image or route works offline.
+This is the first implementation slice, not a production-ready release. The recipe catalog currently contains 8 sample recipes; nutrition values are illustrative metadata and should not be treated as dietary guidance. Browser audio alarms are best-effort and may be blocked or delayed when the browser is suspended or the app is closed. Spatial D-pad navigation is heuristic and must be validated with a physical Android TV remote. Comprehensive offline data caching, YouTube playback, and a secure server-side AI integration remain to be implemented and tested on the target Android TV device. The service worker caches the app shell on repeat visits; it does not guarantee that every recipe image or route works offline.
 
 No paid services or deployment have been configured.
