@@ -98,3 +98,29 @@ for (const viewport of [{ width: 1920, height: 1080 }, { width: 1280, height: 72
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 }
+
+for (const section of [
+  { label: "Resep", heading: "Temukan resep" },
+  { label: "Timer", heading: "Atur waktu memasak" },
+  { label: "Favorit", heading: "Resep favorit" },
+  { label: "Video", heading: "Video memasak" },
+  { label: "Pengaturan", heading: "Pengaturan" },
+]) {
+  test(`Back navigation returns home from ${section.label}`, async ({ page }) => {
+    await page.locator("aside nav").getByRole("button", { name: section.label, exact: true }).click();
+    await expect(page.getByRole("heading", { name: section.heading })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("heading", { name: /chef rumahan/i })).toBeVisible();
+  });
+}
+
+test("Backspace in search stays on recipes while BrowserBack leaves to home", async ({ page }) => {
+  await page.locator("aside nav").getByRole("button", { name: "Resep", exact: true }).click();
+  const search = page.getByPlaceholder("Cari nama resep...");
+  await search.fill("Soto");
+  await search.focus();
+  await page.keyboard.press("Backspace");
+  await expect(page.getByRole("heading", { name: "Temukan resep" })).toBeVisible();
+  await page.keyboard.press("BrowserBack");
+  await expect(page.getByRole("heading", { name: /chef rumahan/i })).toBeVisible();
+});
