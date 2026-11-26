@@ -122,6 +122,7 @@ export default function KitchenHome() {
      if((e.key==="ArrowLeft"&&!atStart)||(e.key==="ArrowRight"&&!atEnd)||(e.key==="ArrowUp"&&tag==="TEXTAREA"))return;
     }
    }
+   if(tag==="SELECT"&&["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key))return;
    const isEditable=!!target&&(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||target.isContentEditable);
    if(e.key==="Escape"||e.key==="Backspace"||e.key==="BrowserBack"){
     if(showHelp){setShowHelp(false);e.preventDefault();return;}
