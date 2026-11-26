@@ -124,3 +124,12 @@ test("Backspace in search stays on recipes while BrowserBack leaves to home", as
   await page.evaluate(() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "BrowserBack", bubbles: true })));
   await expect(page.getByRole("heading", { name: /chef rumahan/i })).toBeVisible();
 });
+
+test("YouTube page provides direct access and search for TV remote", async ({ page }) => {
+  await page.locator("aside nav").getByRole("button", { name: "Video", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "YouTube untuk dapur" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Buka YouTube/i })).toHaveAttribute("href", "https://www.youtube.com/tv");
+  const search = page.getByLabel("Cari video YouTube");
+  await search.fill("ayam kecap");
+  await expect(page.getByRole("link", { name: /Cari di YouTube/i })).toHaveAttribute("href", /search_query=ayam%20kecap/);
+});
