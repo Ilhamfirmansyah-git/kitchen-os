@@ -3,9 +3,24 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const rateBuckets = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 10;
+const WINDOW_MS = 60_000;
+
 const SYSTEM_PROMPT = `Kamu adalah Kirtos, asisten koki rumahan di Kitchen OS. Jawab dalam bahasa Indonesia yang jelas, ringkas, hangat, dan praktis. Utamakan langkah yang bisa dilakukan di dapur rumah. Jika pengguna meminta resep, berikan bahan, takaran, langkah, estimasi waktu yang masuk akal, dan tips. Jangan mengarang fakta nutrisi atau menjamin keamanan pangan jika tidak yakin. Untuk ayam, telur, ikan, dan daging, ingatkan agar dimasak matang. Jika informasi penting tidak ada, tanyakan satu hal yang paling relevan. Jangan mengklaim melihat stok atau kondisi dapur pengguna.`;
 
 export async function POST(request: NextRequest) {
+  const clientIp = request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const now = Date.now();
+  const bucket = rateBuckets.get(clientIp);
+  if (bucket && bucket.resetAt > now && bucket.count >= RATE_LIMIT) {
+    return NextResponse.json({ error: "Terlalu banyak permintaan. Tunggu sebentar sebelum bertanya lagi." }, { status: 429 });
+  }
+  if (!bucket || bucket.resetAt <= now) rateBuckets.set(clientIp, { count: 1, resetAt: now + WINDOW_MS });
+  else bucket.count += 1;
+  if (rateBuckets.size > 5000) {
+    for (const [key, value] of rateBuckets) if (value.resetAt <= now) rateBuckets.delete(key);
+  }
   const apiKey = process.env.KITCHEN_AI_API_KEY;
   const baseUrl = process.env.KITCHEN_AI_BASE_URL || "https://api.openai.com/v1";
   const model = process.env.KITCHEN_AI_MODEL;
