@@ -16,6 +16,17 @@ npm run dev
 ```
 Open http://localhost:3000.
 
+## Quality checks
+
+```bash
+npm run typecheck
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+Playwright end-to-end checks cover recipe discovery/search, starting and advancing a cooking session, and directional-key focus movement at a 1920×1080 viewport. The same checks run in GitHub Actions.
+
 ## Current preview
 - Premium dark kitchen dashboard
 - Recipe collection with search and category filters
