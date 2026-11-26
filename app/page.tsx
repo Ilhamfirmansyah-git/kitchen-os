@@ -28,6 +28,7 @@ export default function KitchenHome() {
  const [seconds,setSeconds] = useState(0);
  const [timerRunning,setTimerRunning] = useState(false);
  const [timerEndAt,setTimerEndAt] = useState<number | null>(null);
+ const [timerHydrated,setTimerHydrated] = useState(false);
  const [timerLabel,setTimerLabel] = useState("Timer dapur");
  const [timerInput,setTimerInput] = useState("05:00");
  const [now,setNow] = useState(new Date());
@@ -50,10 +51,11 @@ export default function KitchenHome() {
    const f=localStorage.getItem("kitchen-favs");if(f)setFavorites(JSON.parse(f));
    const settings=localStorage.getItem("kitchen-settings");if(settings)setSound(JSON.parse(settings).sound??true);
   }catch{}
+  setTimerHydrated(true);
  },[]);
  useEffect(()=>{if(!timerRunning||timerEndAt===null)return;const tick=()=>{const left=Math.max(0,Math.ceil((timerEndAt-Date.now())/1000));setSeconds(left);if(left===0){setTimerRunning(false);setTimerEndAt(null);try{localStorage.removeItem("kitchen-timer");}catch{}}};tick();const t=setInterval(tick,250);return()=>clearInterval(t);},[timerRunning,timerEndAt]);
  useEffect(()=>{try{localStorage.setItem("kitchen-favs",JSON.stringify(favorites));localStorage.setItem("kitchen-settings",JSON.stringify({sound}));}catch{}},[favorites,sound]);
- useEffect(()=>{try{if(timerRunning&&timerEndAt!==null)localStorage.setItem("kitchen-timer",JSON.stringify({label:timerLabel,endAt:timerEndAt,running:true}));else localStorage.setItem("kitchen-timer",JSON.stringify({label:timerLabel,remaining:seconds,running:false}));}catch{}},[timerRunning,timerEndAt,timerLabel,seconds]);
+ useEffect(()=>{if(!timerHydrated)return;try{if(timerRunning&&timerEndAt!==null)localStorage.setItem("kitchen-timer",JSON.stringify({label:timerLabel,endAt:timerEndAt,running:true}));else localStorage.setItem("kitchen-timer",JSON.stringify({label:timerLabel,remaining:seconds,running:false}));}catch{}},[timerHydrated,timerRunning,timerEndAt,timerLabel,seconds]);
  const go = useCallback((p:string)=>{setPage(p);setShowHelp(false);},[]);
  useEffect(()=>{
   const handler=(e:KeyboardEvent)=>{const tag=(e.target as HTMLElement)?.tagName;if(["INPUT","TEXTAREA"].includes(tag))return;
